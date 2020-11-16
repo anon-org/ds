@@ -7,17 +7,17 @@ import (
 )
 
 var (
-	ErrMatrixColDiff   = errors.New("safeMatrix: each column length on safeMatrix is different")
-	ErrIndexOutOfBound = errors.New("safeMatrix: index out of bound")
-	ErrNilMatrix       = errors.New("safeMatrix: matrix is nil")
-	ErrColRowDiff      = errors.New("safeMatrix: col and row are different")
-	ErrDimensionDiff   = errors.New("safeMatrix: dimensions are different")
-	ErrNotSquareMatrix = errors.New("safeMatrix: matrix is not square")
-	ErrZeroDeterminant = errors.New("safeMatrix: cannot inverse, determinant is zero")
+	ErrMatrixColDiff   = errors.New("matrix: each column length on matrix is different")
+	ErrIndexOutOfBound = errors.New("matrix: index out of bound")
+	ErrNilMatrix       = errors.New("matrix: matrix is nil")
+	ErrColRowDiff      = errors.New("matrix: col and row are different")
+	ErrDimensionDiff   = errors.New("matrix: dimensions are different")
+	ErrNotSquareMatrix = errors.New("matrix: matrix is not square")
+	ErrZeroDeterminant = errors.New("matrix: cannot inverse, determinant is zero")
 )
 
-// safeMatrix store matrix data and error
-type safeMatrix struct {
+// matrix store matrix data and error
+type matrix struct {
 	row, col int
 	values   [][]float64
 	err      error
@@ -26,14 +26,14 @@ type safeMatrix struct {
 //<editor-fold desc="constructor">
 
 // Of construct empty matrix with given row & col
-func Of(row, col int) *safeMatrix {
+func Of(row, col int) *matrix {
 	values := make([][]float64, row)
 
 	for i := range values {
 		values[i] = make([]float64, col)
 	}
 
-	return &safeMatrix{
+	return &matrix{
 		row:    row,
 		col:    col,
 		values: values,
@@ -43,7 +43,7 @@ func Of(row, col int) *safeMatrix {
 
 // From construct matrix from given slices
 // returns matrix with ErrMatrixColDiff whenever the columns are different
-func From(values [][]float64) *safeMatrix {
+func From(values [][]float64) *matrix {
 	row := len(values)
 	rows := make([][]float64, row)
 
@@ -59,7 +59,7 @@ func From(values [][]float64) *safeMatrix {
 		rows[i] = values[i]
 	}
 
-	return &safeMatrix{
+	return &matrix{
 		row:    row,
 		col:    col,
 		values: values,
@@ -68,14 +68,14 @@ func From(values [][]float64) *safeMatrix {
 }
 
 // errMatrix construct empty matrix with given error
-func errMatrix(err error) *safeMatrix {
-	return &safeMatrix{
+func errMatrix(err error) *matrix {
+	return &matrix{
 		err: err,
 	}
 }
 
 // Identity will construct square identity matrix with given row
-func Identity(row int) *safeMatrix {
+func Identity(row int) *matrix {
 	result := Of(row, row)
 
 	for i := 0; i < row; i++ {
@@ -97,7 +97,7 @@ func Identity(row int) *safeMatrix {
 
 //<editor-fold desc="attribute">
 // String print matrix form cleanly
-func (m *safeMatrix) String() string {
+func (m *matrix) String() string {
 	if m.HasErr() {
 		return fmt.Sprintf("{[ matrix has error > %v ]}", m.Err().Error())
 	}
@@ -119,7 +119,7 @@ func (m *safeMatrix) String() string {
 }
 
 // Err return error held by matrix
-func (m *safeMatrix) Err() error {
+func (m *matrix) Err() error {
 	if m == nil {
 		*m = *errMatrix(ErrNilMatrix)
 		return ErrNilMatrix
@@ -128,7 +128,7 @@ func (m *safeMatrix) Err() error {
 }
 
 // setErr build error on matrix
-func (m *safeMatrix) setErr(err error) *safeMatrix {
+func (m *matrix) setErr(err error) *matrix {
 	if m == nil {
 		return errMatrix(ErrNilMatrix)
 	}
@@ -138,30 +138,30 @@ func (m *safeMatrix) setErr(err error) *safeMatrix {
 }
 
 // HasErr return true if matrix has error
-func (m *safeMatrix) HasErr() bool {
+func (m *matrix) HasErr() bool {
 	return m.Err() != nil
 }
 
 // Row return matrix's row
-func (m *safeMatrix) Row() int {
+func (m *matrix) Row() int {
 	if m.HasErr() {
 		return 0
 	}
 
-	return m.Row()
+	return m.row
 }
 
 // Col return matrix's col
-func (m *safeMatrix) Col() int {
+func (m *matrix) Col() int {
 	if m.HasErr() {
 		return 0
 	}
 
-	return m.Col()
+	return m.col
 }
 
 // Get return value at given index
-func (m *safeMatrix) Get(row, col int) float64 {
+func (m *matrix) Get(row, col int) float64 {
 	if m.HasErr() {
 		return 0
 	}
@@ -175,7 +175,7 @@ func (m *safeMatrix) Get(row, col int) float64 {
 }
 
 // GetRow return row slice at given row
-func (m *safeMatrix) GetRow(row int) []float64 {
+func (m *matrix) GetRow(row int) []float64 {
 	if m.HasErr() {
 		return []float64{}
 	}
@@ -189,7 +189,7 @@ func (m *safeMatrix) GetRow(row int) []float64 {
 }
 
 // Set build value at given index
-func (m *safeMatrix) Set(row, col int, value float64) *safeMatrix {
+func (m *matrix) Set(row, col int, value float64) *matrix {
 	if m.HasErr() {
 		return m
 	}
@@ -204,7 +204,7 @@ func (m *safeMatrix) Set(row, col int, value float64) *safeMatrix {
 }
 
 // SetRow build row slice at given row
-func (m *safeMatrix) SetRow(row int, values []float64) *safeMatrix {
+func (m *matrix) SetRow(row int, values []float64) *matrix {
 	if m.HasErr() {
 		return m
 	}
@@ -223,7 +223,7 @@ func (m *safeMatrix) SetRow(row int, values []float64) *safeMatrix {
 //<editor-fold desc="operation">
 
 // DotProduct return new matrix as the dot product result
-func (m *safeMatrix) DotProduct(other *safeMatrix) *safeMatrix {
+func (m *matrix) DotProduct(other *matrix) *matrix {
 	if m.HasErr() {
 		return m
 	}
@@ -256,7 +256,7 @@ func (m *safeMatrix) DotProduct(other *safeMatrix) *safeMatrix {
 }
 
 // Add return new matrix as the Addition result
-func (m *safeMatrix) Add(other *safeMatrix) *safeMatrix {
+func (m *matrix) Add(other *matrix) *matrix {
 	if m.HasErr() {
 		return m
 	}
@@ -284,7 +284,7 @@ func (m *safeMatrix) Add(other *safeMatrix) *safeMatrix {
 }
 
 // Subtract return new matrix as the Subtraction result
-func (m *safeMatrix) Subtract(other *safeMatrix) *safeMatrix {
+func (m *matrix) Subtract(other *matrix) *matrix {
 	if m.HasErr() {
 		return m
 	}
@@ -312,7 +312,7 @@ func (m *safeMatrix) Subtract(other *safeMatrix) *safeMatrix {
 }
 
 // Transpose return new matrix as the transpose result
-func (m *safeMatrix) Transpose() *safeMatrix {
+func (m *matrix) Transpose() *matrix {
 	if m.HasErr() {
 		return m
 	}
@@ -329,7 +329,7 @@ func (m *safeMatrix) Transpose() *safeMatrix {
 }
 
 // Determinant return determinant value from matrix
-func (m *safeMatrix) Determinant() float64 {
+func (m *matrix) Determinant() float64 {
 	if m.HasErr() {
 		return 0
 	}
@@ -350,7 +350,7 @@ func (m *safeMatrix) Determinant() float64 {
 }
 
 // DeterminantFromCofactor return determinant value from matrix & its cofactor
-func (m *safeMatrix) DeterminantFromCofactor(cofactor *safeMatrix) float64 {
+func (m *matrix) DeterminantFromCofactor(cofactor *matrix) float64 {
 	if m.HasErr() || cofactor.HasErr() {
 		return 0
 	}
@@ -370,7 +370,7 @@ func (m *safeMatrix) DeterminantFromCofactor(cofactor *safeMatrix) float64 {
 }
 
 // Minor return new matrix as the minor result
-func (m *safeMatrix) Minor() *safeMatrix {
+func (m *matrix) Minor() *matrix {
 	length := m.Row() * m.Col()
 
 	result := Of(m.Row(), m.Col())
@@ -400,7 +400,7 @@ func (m *safeMatrix) Minor() *safeMatrix {
 }
 
 // Cofactor return new matrix as the cofactor result
-func (m *safeMatrix) Cofactor() *safeMatrix {
+func (m *matrix) Cofactor() *matrix {
 	multiplier := 1.0
 
 	result := Of(m.Row(), m.Col())
@@ -420,7 +420,7 @@ func (m *safeMatrix) Cofactor() *safeMatrix {
 }
 
 // Inverse return new matrix as the inverse result
-func (m *safeMatrix) Inverse() *safeMatrix {
+func (m *matrix) Inverse() *matrix {
 	if m.HasErr() {
 		return m
 	}
@@ -442,7 +442,7 @@ func (m *safeMatrix) Inverse() *safeMatrix {
 }
 
 // Flatten return new matrix as the flatten result
-func (m *safeMatrix) Flatten() *safeMatrix {
+func (m *matrix) Flatten() *matrix {
 	if m.HasErr() {
 		return m
 	}
@@ -456,7 +456,7 @@ func (m *safeMatrix) Flatten() *safeMatrix {
 }
 
 // IsEqual compare the value of matrices
-func (m *safeMatrix) IsEqual(other *safeMatrix) bool {
+func (m *matrix) IsEqual(other *matrix) bool {
 	if m.HasErr() || other.HasErr() {
 		return false
 	}
@@ -480,7 +480,7 @@ func (m *safeMatrix) IsEqual(other *safeMatrix) bool {
 
 //<editor-fold desc="private method">
 // determinant2 return determinant value from matrix 2x2
-func (m *safeMatrix) determinant2() float64 {
+func (m *matrix) determinant2() float64 {
 	ad := m.Get(0, 0) * m.Get(1, 1)
 	bc := m.Get(0, 1) * m.Get(1, 0)
 
@@ -488,7 +488,7 @@ func (m *safeMatrix) determinant2() float64 {
 }
 
 // determinant return determinant value from matrix > 2x2
-func (m *safeMatrix) determinant() float64 {
+func (m *matrix) determinant() float64 {
 	header := m.GetRow(0)
 	body := m.values[1:][:]
 
@@ -519,7 +519,7 @@ func (m *safeMatrix) determinant() float64 {
 }
 
 // inverse return new matrix as the inverse result
-func (m *safeMatrix) inverse(determinant float64) *safeMatrix {
+func (m *matrix) inverse(determinant float64) *matrix {
 	if determinant == 0 {
 		return m.setErr(ErrZeroDeterminant)
 	}
